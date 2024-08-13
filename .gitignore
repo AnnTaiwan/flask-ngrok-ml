@@ -1,0 +1,7 @@
+image_files/*
+audio_files/*
+*.png
+*.flac
+*.wav
+*.mp3
+__pycache__/

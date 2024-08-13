@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Two Numbers</title>
+</head>
+<body>
+    <h1>Add Two Numbers</h1>
+    
+    <!-- Input fields for numbers -->
+    <form id="addForm">
+        <label for="number1">Number 1:</label>
+        <input type="number" id="number1" name="number1" required>
+        <br><br>
+        
+        <label for="number2">Number 2:</label>
+        <input type="number" id="number2" name="number2" required>
+        <br><br>
+        
+        <button type="submit">Add</button>
+    </form>
+    
+    <!-- Div to display the result -->
+    <div id="result"></div>
+    
+    <script>
+        document.getElementById('addForm').onsubmit = async function(event) {
+            event.preventDefault();  // 阻止表單的預設提交行為
+
+            const number1 = parseFloat(document.getElementById('number1').value);
+            const number2 = parseFloat(document.getElementById('number2').value);
+            
+            // 構建要發送的 JSON 數據
+            const data = {
+                "a": number1,
+                "b": number2
+            };
+
+            try {
+                // 使用 fetch 發送 POST 請求到 /add 路由
+                const response = await fetch('http://127.0.0.1:5000/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error in fetching data');
+                }
+
+                const result = await response.json();
+                const resultDiv = document.getElementById('result');
+
+                // 顯示返回的結果
+                resultDiv.innerHTML = `<p>Result: ${result.result}</p>`;
+            } catch (error) {
+                console.error('Error:', error);
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+            }
+        };
+    </script>
+</body>
+</html>
