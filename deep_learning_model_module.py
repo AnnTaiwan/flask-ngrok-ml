@@ -3,9 +3,10 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 
+from pydub import AudioSegment
 import numpy as np
 import matplotlib.pyplot as plt
-
+import math
 import os
 
 
@@ -98,6 +99,127 @@ def save_mel_spec(audio_path, sr, dest_mel_spec_path):
     plt.savefig(dest_mel_spec_path)
     # Close the figure to free up resources
     plt.close()
+
+# Use `pydub` to load the audio in the video
+def load_audio_as_mono(filename, target_sr=None):
+    """
+    Load an audio file, convert it to mono, and optionally resample it to a target sample rate.
+    
+    Parameters:
+        filename (str): Path to the audio file to be loaded. The file should be in a format supported by pydub.
+        target_sr (int, optional): Target sample rate for the audio. If provided, the audio will be resampled to this rate.
+                                   If None, the original sample rate of the audio file will be used.
+    
+    Returns:
+        tuple: A tuple containing:
+            - samples (numpy.ndarray): The audio samples as a NumPy array, normalized to the range [-1, 1]. Due to the librosa needed later.
+            - sample_rate (int): The sample rate of the loaded audio.
+    
+    Notes:
+        - The function converts the audio to mono if it is not already.
+        - The audio samples are normalized to a floating-point range of [-1, 1] for further processing.
+    """
+    # Load the audio file
+    audio = AudioSegment.from_file(filename)
+    
+    # Convert to mono
+    audio = audio.set_channels(1)
+    
+    # Resample audio to target sample rate if specified
+    if target_sr is not None and audio.frame_rate != target_sr:
+        audio = audio.set_frame_rate(target_sr)
+    
+    # Convert to NumPy array
+    samples = np.array(audio.get_array_of_samples())
+    
+    # Normalize to [-1, 1]
+    samples = samples.astype(np.float32)
+    samples = samples / np.max(np.abs(samples))
+    
+    return samples, audio.frame_rate
+
+# use for save the audio extracted from the mp4
+def save_audio(filename, samples, sample_rate):
+    """
+    Save a NumPy array of audio samples to a WAV file.
+    
+    Parameters:
+        filename (str): Path to the output WAV file where the audio will be saved.
+        samples (numpy.ndarray): The audio samples as a NumPy array, which should be in the range [-1, 1].
+        sample_rate (int): The sample rate of the audio to be used for the output file.
+    
+    Returns:
+        None
+    
+    Notes:
+        - The function converts the audio samples from floating-point to 16-bit PCM format before saving.
+        - The audio is saved using the pydub library.
+    """
+    # Convert NumPy array to a format compatible with AudioSegment
+    samples = (samples * 32767).astype(np.int16)  # Convert to 16-bit PCM
+    
+    # Create an AudioSegment instance
+    audio_segment = AudioSegment(
+        samples.tobytes(), 
+        frame_rate=sample_rate,
+        sample_width=samples.dtype.itemsize,
+        channels=1
+    )
+    
+    # Export audio to a file
+    audio_segment.export(filename, format="wav")
+
+def save_mel_spec_from_video(video_path, sr, dest_mel_spec_folder):
+    '''
+    Description:
+        Plot the audio into a mel spectrogram and save it as an image file.
+        
+    Parameters:
+        video_path (str): Path to the audio file.
+        sr (int): Sample rate for loading the audio.
+        dest_mel_spec_folder (str): Destination folder name for saving the mel spectrogram images.
+    '''
+    audio_array, sample_rate = load_audio_as_mono(video_path, target_sr=SAMPLE_RATE)
+    # print("Shape:", audio_array.shape, sample_rate) # like Shape: (381494,) 22050
+
+    '''
+    # Save the processed audio
+    saved_audio_path = os.path.splitext(os.path.basename(video_path))[0] + '_processed.wav'
+    save_audio(saved_audio_path, audio_array, sample_rate)
+    print(f"Processed audio saved to: {saved_audio_path}")
+    '''
+    segment_duration = 5  # Segment duration in seconds
+    # Split audio into segments of 5 seconds
+    num_segments = math.ceil(len(audio_array) / (segment_duration * sr))
+    # print("num_segments", num_segments)
+
+    for i in range(num_segments):
+        start_sample = i * segment_duration * sr
+        end_sample = min(start_sample + segment_duration * sr, len(audio_array))
+        audio_segment = audio_array[start_sample:end_sample]
+             
+        # pad the audio with the original audio or cut the audio
+        if len(audio_segment) < AUDIO_LEN:
+            length_audio = len(audio_segment)
+            repeat_count = (AUDIO_LEN + length_audio - 1) // length_audio  # Calculate the `ceiling` of AUDIO_LEN / length_audio
+            audio_segment = np.tile(audio_segment, repeat_count)[:AUDIO_LEN]  # Repeat and cut to the required length
+        
+
+        # Generate the mel spectrogram
+        spec = get_mel_spectrogram(audio_segment)
+            
+        # Plot the mel spectrogram
+        fig = plot_mel_spectrogram(spec)
+        plt.title(f"Spectrogram Segment {i+1}", fontsize=17)
+            
+        # Save the spectrogram image with a meaningful filename
+        segment_filename = f"spec_{os.path.splitext(os.path.basename(video_path))[0]}_segment_{i+1}.png"
+        save_filepath = os.path.join(dest_mel_spec_folder, segment_filename)
+        plt.savefig(save_filepath)
+            
+        # Close the figure to free up resources
+        plt.close()
+
 
 # parameters for preprocessing
 IMAGE_SIZE = 128

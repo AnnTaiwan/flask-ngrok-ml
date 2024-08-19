@@ -3,46 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Prediction</title>
+    <title>Home</title>
 </head>
 <body>
-    <h1>Upload an Audio for Prediction</h1>
-    <form id="uploadForm" enctype="multipart/form-data">
-        <label for="audioFile">Select an audio file:</label>
-        <input type="file" id="audioFile" name="audioFile" accept="audio/*" required>
-        <br><br>
-        <button type="submit">Upload and Predict</button>
-    </form>
-
-    <h2>Prediction Result</h2>
-    <div id="result"></div>
-
-    <script>
-        document.getElementById('uploadForm').onsubmit = async function(event) {
-            event.preventDefault();  // 阻止表单默认提交
-
-            const formData = new FormData();
-            const audioFile = document.getElementById('audioFile').files[0];
-            formData.append('audioFile', audioFile);
-
-            try {
-                const response = await fetch('http://127.0.0.1:5000/predict', {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (!response.ok) {
-                    throw new Error('Error in fetching data');
-                }
-
-                const result = await response.json();
-                const resultDiv = document.getElementById('result');
-
-                resultDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        };
-    </script>
+    <h1>Welcome to the Audio and Video Prediction App</h1>
+    <button onclick="window.location.href='/predict_audio_home'">Predict Audio</button>
+    <button onclick="window.location.href='/predict_video_home'">Predict Video</button>
 </body>
 </html>
