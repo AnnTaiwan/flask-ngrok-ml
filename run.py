@@ -3,12 +3,15 @@ This code is used to activate a local server, and then I will use Postman to act
 '''
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from deep_learning_model_module import CNN_model9, save_mel_spec, model_predict, save_mel_spec_from_video
+from deep_learning_model_module import CNN_model9, save_mel_spec, model_predict, save_mel_spec_from_video, save_mel_spec_with_separation
 from observe_audio_function_ver3 import SAMPLE_RATE
+from youtube_download_audio import download_audio_from_youtube
 import os
 import matplotlib
 import torch
-
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 # Set Matplotlib backend if needed, Agg is not interactive backend.
 # To prevent warning from "Starting a Matplotlib GUI outside of the main thread will likely fail."
 matplotlib.use('Agg')  # Set the backend to 'Agg' before importing pyplot
@@ -36,6 +39,10 @@ def predict_audio_home():
 @app.route('/predict_video_home')
 def predict_video_home():
     return render_template('predict_video_home.html')
+
+@app.route('/predict_youtube_audio_home')
+def predict_youtube_audio_home():
+    return render_template('predict_youtube_audio_home.html')
 
 @app.route('/test', methods=['GET'])
 def get_test():
@@ -164,6 +171,68 @@ def predict_audio():
             'output_label_1': output_list[0][1],  # Assuming there are two output labels
             'predicted_label': predicted_label_list[0],
             'target': 'spoof' if predicted_label_list[0] else 'bonafide'
+        })
+    
+    # Return formatted_predictions as JSON response
+    return jsonify(formatted_predictions)
+
+@app.route('/predict_youtube_audio', methods=['POST'])
+def predict_youtube_audio():
+    # everytime just get a url
+    # Clear previously generated images
+    for i in os.listdir(IMAGE_FOLDER_NAME):
+        i_path = os.path.join(IMAGE_FOLDER_NAME, i)
+        os.remove(i_path)
+
+    # Ensure the request contains a JSON payload
+    if not request.is_json:
+        return jsonify({'error': 'No JSON data provided'}), 400
+
+    # Parse the JSON data
+    data = request.get_json()
+    # print(data) # like {'url': 'https://your_url'}
+
+    # Validate the URL field
+    if 'url' not in data or not data['url']:
+        return jsonify({'error': 'URL field is missing or empty'}), 400
+
+    youtube_url = data['url'] # get the actual url
+    # set the destination audio path here
+    audio_dest_path = os.path.join(AUDIO_FOLDER_NAME, 'youtube_audio_download.mp3')
+    download_audio_from_youtube(youtube_url, audio_dest_path)
+    # get the audio, now do the same thing as predicting audio
+    save_mel_spec_with_separation(audio_dest_path, SAMPLE_RATE, IMAGE_FOLDER_NAME)
+    # directly remove the audio
+    os.remove(audio_dest_path)
+    
+    # Predict the images in IMAGE_FOLDER, return a list containing several tuples containing (the image path, the softmax prediction output, predicted label)
+    result = model_predict(IMAGE_FOLDER_NAME, model, device)
+    # print(f"Finish predicting images in {IMAGE_FOLDER_NAME}.")
+
+    num_bonafide = 0
+    num_spoof = 0
+    # Format predictions into JSON
+    formatted_predictions = []
+    for image_path, output, predicted_label in result:
+        output_list = output.tolist()  # Convert tensor to list if it's a tensor
+        predicted_label_list = predicted_label.tolist()
+        formatted_predictions.append({
+            'image_path': image_path,
+            'output_label_0': output_list[0][0],
+            'output_label_1': output_list[0][1],  # Assuming there are two output labels
+            'predicted_label': predicted_label_list[0],
+            'target': 'spoof' if predicted_label_list[0] else 'bonafide'
+        })
+        # calculate the voting result
+        if predicted_label_list[0]:
+            num_spoof += 1
+        else:
+            num_bonafide += 1    
+    # append the final result
+    formatted_predictions.append({
+            "Count of Bonafide Speech": num_bonafide,
+            "Count of Spoof Speech": num_spoof,
+            "Final Voting Result": 'SPOOF' if num_spoof >= num_bonafide else 'BONAFIDE'
         })
     
     # Return formatted_predictions as JSON response

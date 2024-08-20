@@ -4,4 +4,6 @@ audio_files/*
 *.flac
 *.wav
 *.mp3
+*.mp4
 __pycache__/
+download_higer_quality_video_youtube.py

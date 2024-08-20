@@ -220,6 +220,71 @@ def save_mel_spec_from_video(video_path, sr, dest_mel_spec_folder):
         # Close the figure to free up resources
         plt.close()
 
+def save_mel_spec_with_separation(audio_path, sr, dest_mel_spec_folder):
+    '''
+    Description:
+        This function loads an audio file, splits it into segments of fixed duration (5 seconds), and generates a mel spectrogram 
+        for each segment. The mel spectrogram is then saved as an image file in the specified destination folder. If a segment is 
+        shorter than the expected length, it is padded by repeating the original audio segment.
+
+    Parameters:
+        audio_path (str): Path to the input audio file that will be split into segments.
+        sr (int): The sample rate to use when loading the audio file.
+        dest_mel_spec_folder (str): The folder where the generated mel spectrogram images will be saved.
+
+    Process:
+        1. The audio is loaded using the specified sample rate (`sr`).
+        2. The audio is split into segments, each of a fixed duration (5 seconds).
+        3. If a segment is shorter than the required length (`AUDIO_LEN`), the audio is repeated and/or truncated to fit the required length.
+        4. For each segment, a mel spectrogram is generated and plotted.
+        5. Each mel spectrogram is saved as a PNG image in the destination folder. The filenames are formatted to include the original 
+           audio file's base name and the segment index.
+        6. The plotting resources are cleaned up by closing each figure after saving the image.
+
+    Returns:
+        None
+
+    Dependencies:
+        This function relies on external helper functions:
+            - load_audio(): Loads the audio from the file.
+            - get_mel_spectrogram(): Converts the audio into a mel spectrogram.
+            - plot_mel_spectrogram(): Plots the mel spectrogram.
+            
+        It also uses matplotlib to save the spectrogram images and numpy for handling the audio data.
+    '''
+    audio, sr = load_audio(audio_path, sr=sr)
+    
+    segment_duration = 5  # Segment duration in seconds
+    # Split audio into segments of 5 seconds
+    num_segments = math.ceil(len(audio) / (segment_duration * sr))
+    # print("num_segments", num_segments)
+
+    for i in range(num_segments):
+        start_sample = i * segment_duration * sr
+        end_sample = min(start_sample + segment_duration * sr, len(audio))
+        audio_segment = audio[start_sample:end_sample]
+             
+        # pad the audio with the original audio or cut the audio
+        if len(audio_segment) < AUDIO_LEN:
+            length_audio = len(audio_segment)
+            repeat_count = (AUDIO_LEN + length_audio - 1) // length_audio  # Calculate the `ceiling` of AUDIO_LEN / length_audio
+            audio_segment = np.tile(audio_segment, repeat_count)[:AUDIO_LEN]  # Repeat and cut to the required length
+        
+
+        # Generate the mel spectrogram
+        spec = get_mel_spectrogram(audio_segment)
+            
+        # Plot the mel spectrogram
+        fig = plot_mel_spectrogram(spec)
+        plt.title(f"Spectrogram Segment {i+1}", fontsize=17)
+            
+        # Save the spectrogram image with a meaningful filename
+        segment_filename = f"spec_{os.path.splitext(os.path.basename(audio_path))[0]}_segment_{i+1}.png"
+        save_filepath = os.path.join(dest_mel_spec_folder, segment_filename)
+        plt.savefig(save_filepath)
+            
+        # Close the figure to free up resources
+        plt.close()
 
 # parameters for preprocessing
 IMAGE_SIZE = 128
