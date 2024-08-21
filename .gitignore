@@ -1,9 +1,13 @@
 image_files/*
 audio_files/*
+video_files/*
+testing_audio/*
 *.png
 *.flac
 *.wav
 *.mp3
 *.mp4
+*.m4a
 __pycache__/
 download_higer_quality_video_youtube.py
+.env

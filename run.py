@@ -10,6 +10,11 @@ import os
 import matplotlib
 import torch
 import warnings
+import google.generativeai as genai
+import os, pathlib
+from dotenv import load_dotenv
+load_dotenv()  # load .env document , in order to load the api_key
+
 warnings.filterwarnings("ignore", category=UserWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 # Set Matplotlib backend if needed, Agg is not interactive backend.
@@ -23,7 +28,7 @@ PTH_PATH = "model_9_ENG_ver1.pth"
 
 model = None
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
+Gemini_model = None
 app = Flask(__name__)
 CORS(app)
 
@@ -43,6 +48,10 @@ def predict_video_home():
 @app.route('/predict_youtube_audio_home')
 def predict_youtube_audio_home():
     return render_template('predict_youtube_audio_home.html')
+
+@app.route('/text_analysis_home')
+def text_analysis_home():
+    return render_template('text_analysis_home.html')
 
 @app.route('/test', methods=['GET'])
 def get_test():
@@ -238,6 +247,68 @@ def predict_youtube_audio():
     # Return formatted_predictions as JSON response
     return jsonify(formatted_predictions)
 
+@app.route('/text_analysis', methods=['POST'])
+def text_analysis():
+    # Check if any file was uploaded
+    if not any(request.files.values()):
+        return jsonify({'error': 'No files uploaded'}), 400
+   
+    # Allowed MIME types for audio files
+    allowed_mime_types = {'audio/mp3', 'audio/mpeg', 'audio/wav', 'audio/wave', 'audio/ogg', 'audio/x-wav', 'audio/flac', 'audio/x-m4a', 'audio/mp4'}
+    
+    formatted_response = []  # record the response text
+    # Currently, each audio changed into one image, and do one prediction
+    for file_key in request.files:
+        audio = request.files[file_key]
+        # print(audio.mimetype)
+        # Check if the uploaded file is an audio file based on MIME type
+        if audio.mimetype not in allowed_mime_types:
+            return jsonify({'error': f'Uploaded file "{audio.filename}" is not a valid audio file'}), 400
+
+        # Save the uploaded file to a temporary location
+        audio_path = os.path.join(AUDIO_FOLDER_NAME, audio.filename)
+        audio.save(audio_path)
+
+        # do text analysis
+        # Create the prompt.
+        prompt = """I need assistance in analyzing text for scam detection. 
+        I will upload an audio file containing a speaker who is reading a text, and you need to analyze the transcribed speech to determine if there is any scam risk.
+        Please provide a structured analysis report divided into the following six parts:
+            1. Brief Summary: Summarize the given text succinctly.
+            2. Likelihood of Scam: Indicate the probability that the text contains a scam, specifying if it is high, medium, or low.
+            3. Type of Scam: Identify the type of scam, if any, and provide a detailed point-by-point analysis of why it is considered a scam.
+            4. Preventive Advice: Offer practical recommendations on how to avoid falling victim to such scams.
+            5. Reason for Analysis: Explain the factors and evidence that led to the assessment of the scam risk and type.
+            6. Conclusion: Provide a concise conclusion based on the analysis.
+        Please ensure that the response follows this structure to facilitate parsing and integration with the application. Respond in Traditional Chinese by default.
+        """
+
+        # Load the audio file into a Python Blob object containing the audio
+        # file's bytes and then pass the prompt and the audio to Gemini.
+        # get the audio type
+        _, extension = os.path.splitext(audio_path)
+        extension = extension.lstrip('.') # get rid of the '.'mp3
+        response = Gemini_model.generate_content([
+            prompt,
+            {
+                "mime_type": "audio/" + extension,
+                "data": pathlib.Path(audio_path).read_bytes()
+            }
+        ])
+        # print(response.text)
+        # Save Gemini's response to the prompt and the inline audio, replacing new lines with <br> tags
+        formatted_text = response.text.replace('\n', '<br>')
+        formatted_response.append({'audio_path':audio_path,
+                                   'Result':formatted_text})
+        
+        # directly remove the audio
+        os.remove(audio_path)
+
+    # Return formatted response as JSON
+    return jsonify(formatted_response)
+
+
+
 if __name__ == '__main__':
     # create necessary folders
     if not os.path.exists(AUDIO_FOLDER_NAME):
@@ -246,12 +317,17 @@ if __name__ == '__main__':
         os.makedirs(IMAGE_FOLDER_NAME)
     if not os.path.exists(VIDEO_FOLDER_NAME):
         os.makedirs(VIDEO_FOLDER_NAME)
-    # assign model
+    # assign CNN model
     model = CNN_model9()
     # Move model to device
     model.to(device)
     # load pth for model
     state_dict = torch.load(PTH_PATH)
     model.load_state_dict(state_dict)
+
+    # load Gemini model
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+
+    Gemini_model =  genai.GenerativeModel('gemini-1.5-flash')
 
     app.run(host='127.0.0.1', port=5000, debug=True) # `127.0.0.1` only allowed local pc can visit
