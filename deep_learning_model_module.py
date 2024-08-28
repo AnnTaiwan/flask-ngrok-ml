@@ -13,8 +13,8 @@ import os
 # preprocessing
 from observe_audio_function_ver3 import load_audio, get_mel_spectrogram, plot_mel_spectrogram, AUDIO_LEN, SAMPLE_RATE
 
-
-class CNN_model9(nn.Module):
+# used for Chinese
+class CNN_model9(nn.Module): 
     def __init__(self):
         super(CNN_model9, self).__init__()
         self.input_layers = nn.ModuleList([
@@ -73,6 +73,66 @@ class CNN_model9(nn.Module):
             x = layer(x)
         return x  
 
+# used for english
+class CNN_model13(nn.Module):
+    def __init__(self):
+        super(CNN_model13, self).__init__()
+        self.input_layers = nn.ModuleList([
+            nn.Sequential(
+                nn.Conv2d(3, 8, 5, stride=1), # kernel = 5*5
+                nn.ReLU(),
+                nn.BatchNorm2d(8), 
+                nn.MaxPool2d(2, stride=2) 
+            )
+        ])
+        
+        conv_filters = [14,44,20,8] 
+        self.conv_layers = nn.ModuleList([
+            nn.Sequential(
+                nn.Conv2d(8, 14, 1),
+                nn.ReLU(),
+                nn.BatchNorm2d(14)
+            ),
+            nn.Sequential(
+                nn.Conv2d(14, 14, 3),
+                nn.ReLU(),
+                nn.BatchNorm2d(14)
+            ),
+            nn.MaxPool2d(2, stride=2)
+        ])
+        for i in range(1, len(conv_filters)):
+            self.conv_layers.append(nn.Sequential(
+                nn.Conv2d(conv_filters[i-1], conv_filters[i], 1),
+                nn.ReLU(),
+                nn.BatchNorm2d(conv_filters[i])
+            ))
+            self.conv_layers.append(nn.Sequential(
+                nn.Conv2d(conv_filters[i], conv_filters[i], 3),
+                nn.ReLU(),
+                nn.BatchNorm2d(conv_filters[i])
+            )
+            )
+            self.conv_layers.append(
+                nn.MaxPool2d(2, stride=2)
+            )
+        # final layer output above is (8, 2, 2) 
+        self.class_layers = nn.ModuleList([
+            nn.Sequential(
+                # Flatten layers
+                nn.Linear(8*2*2, 2),       
+            )
+        ])
+        
+    def forward(self, x):
+        for layer in self.input_layers:
+            x = layer(x)
+        for layer in self.conv_layers:
+            x = layer(x)
+        x = x.view(-1, 8*2*2)
+        for layer in self.class_layers:
+            x = layer(x)
+        return x
+    
 def save_mel_spec(audio_path, sr, dest_mel_spec_path):
     '''
     Description:

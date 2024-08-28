@@ -6,7 +6,7 @@ ssl._create_default_https_context = ssl._create_stdlib_context
 
 
 if __name__ == "__main__":    
-    yt = YouTube('https://www.youtube.com/watch?v=R5teHn6pmLs', on_progress_callback=on_progress)   
+    yt = YouTube('https://www.youtube.com/watch?v=C2NjrrLcXYg', on_progress_callback=on_progress)   
     # print(yt.streams.all()) # to see the suitable quality of video
     # print(yt.streams.filter(progressive=True))
     print("title:", yt.title)           # 影片標題
@@ -18,6 +18,6 @@ if __name__ == "__main__":
 
 
     print('download...')
-    yt.streams.filter().get_highest_resolution().download(filename='Jodie_Comer_reward_360p.mp4')
+    yt.streams.filter().get_highest_resolution().download(filename='test_video_from_youtube_intro.mp4')
     # 下載最高畫質影片，如果沒有設定 filename，則以原本影片的 title 作為檔名
     print('\nok!')

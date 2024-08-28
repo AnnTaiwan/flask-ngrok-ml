@@ -7,11 +7,25 @@
 </head>
 <body>
     <h1>Upload an Audio for Prediction</h1>
-    <h3>Only allow mpeg, wav, ogg, x-wav, and flac file.</h3>
+    <h3>Only allow mpeg, wav, ogg, x-wav, flac, and mp3 file.</h3>
     <form id="uploadForm" enctype="multipart/form-data">
         <label for="audioFile">Select an audio file:</label>
         <input type="file" id="audioFile" name="audioFile" accept="audio/*" required>
         <br><br>
+
+        <!-- Language Selection -->
+        <label for="language">Select Language:</label>
+        <input type="radio" id="english" name="language" value="english" checked>
+        <label for="english">English</label>
+        <input type="radio" id="chinese" name="language" value="chinese">
+        <label for="chinese">Chinese</label>
+        <br><br>
+
+        <!-- Text Analysis Checkbox -->
+        <input type="checkbox" id="text_analysis" name="text_analysis" value="yes">
+        <label for="text_analysis">Perform Text Analysis</label>
+        <br><br>
+
         <button type="submit">Upload and Predict</button>
     </form>
 
@@ -25,6 +39,14 @@
             const formData = new FormData();
             const audioFile = document.getElementById('audioFile').files[0];
             formData.append('audioFile', audioFile);
+
+            // Append selected language
+            const selectedLanguage = document.querySelector('input[name="language"]:checked').value;
+            formData.append('language', selectedLanguage);
+
+            // Append text analysis option
+            const textAnalysisChecked = document.getElementById('text_analysis').checked ? 'yes' : 'no';
+            formData.append('text_analysis', textAnalysisChecked);
 
             try {
                 const response = await fetch('/predict_audio', {

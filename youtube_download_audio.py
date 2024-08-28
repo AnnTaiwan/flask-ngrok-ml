@@ -21,10 +21,10 @@ def download_audio_from_youtube(video_url, dest_path):
 
 if __name__ == "__main__":
     # The destination path for the downloaded audio file (mp3 format)
-    dest_path = 'boom_clap.mp3'
+    dest_path = 'test_video_from_youtube_intro.mp3'
     
     # The YouTube video URL to download the audio from
-    video_url = 'https://www.youtube.com/watch?v=AOPMlIIg_38'
+    video_url = 'https://www.youtube.com/watch?v=C2NjrrLcXYg'
     
     # Print a message indicating that the download is starting
     print(f"Downloading audio from {video_url} ...\nand saved it into {dest_path}.")

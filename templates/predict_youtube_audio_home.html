@@ -13,6 +13,20 @@
         <label for="videoUrl">Enter the YouTube URL:</label>
         <input type="url" id="videoUrl" name="videoUrl" placeholder="https://www.youtube.com/watch?v=example" required>
         <br><br>
+
+        <!-- Language Selection -->
+        <label for="language">Select Language:</label>
+        <input type="radio" id="english" name="language" value="english" checked>
+        <label for="english">English</label>
+        <input type="radio" id="chinese" name="language" value="chinese">
+        <label for="chinese">Chinese</label>
+        <br><br>
+
+        <!-- Text Analysis Checkbox -->
+        <input type="checkbox" id="text_analysis" name="text_analysis" value="yes">
+        <label for="text_analysis">Perform Text Analysis</label>
+        <br><br>
+
         <button type="submit">Submit and Predict</button>
     </form>
 
@@ -24,8 +38,13 @@
             event.preventDefault();
 
             const videoUrl = document.getElementById('videoUrl').value;
+            const selectedLanguage = document.querySelector('input[name="language"]:checked').value;
+            const textAnalysisChecked = document.getElementById('text_analysis').checked ? 'yes' : 'no';
+
             const data = {
-                url: videoUrl
+                url: videoUrl,
+                language: selectedLanguage,
+                text_analysis: textAnalysisChecked
             };
 
             try {

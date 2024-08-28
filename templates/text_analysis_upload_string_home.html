@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Analysis</title>
+    <style>
+        textarea {
+            width: 97%;
+            height: 200px;
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Text Analysis</h1>
+    <h3>Please enter the text you want to analyze.</h3>
+    <form id="textForm">
+        <label for="textInput">Enter Text:</label>
+        <br><br>
+        <textarea id="textInput" name="text" placeholder="Enter your text here..." required></textarea>
+        <br><br>
+        <button type="submit">Submit and Analyze</button>
+    </form>
+
+    <h2>Analysis Result</h2>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('textForm').onsubmit = async function(event) {
+            event.preventDefault();
+
+            const textInput = document.getElementById('textInput').value;
+
+            const data = {
+                text: textInput
+            };
+
+            try {
+                const response = await fetch('/text_analysis_upload_string', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data),
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error in fetching data');
+                }
+
+                const result = await response.json();
+                const resultDiv = document.getElementById('result');
+
+                resultDiv.innerHTML = `<pre>${JSON.stringify(result, null, 2)}</pre>`;
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').textContent = 'Failed to get analysis result. Please try again.';
+            }
+        };
+    </script>
+</body>
+</html>
