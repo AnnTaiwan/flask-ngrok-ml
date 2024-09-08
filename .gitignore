@@ -11,3 +11,4 @@ testing_audio/*
 __pycache__/
 download_higer_quality_video_youtube.py
 .env
+*.pth

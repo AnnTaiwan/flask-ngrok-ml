@@ -67,7 +67,7 @@ def do_text_analysis(audio_path, Gemini_model):
             4. Preventive Advice: Offer practical recommendations on how to avoid falling victim to such scams.
             5. Reason for Analysis: Explain the factors and evidence that led to the assessment of the scam risk and type.
             6. Conclusion: Provide a concise conclusion based on the analysis.
-        Please ensure that the response follows this structure to facilitate parsing and integration with the application. Respond in Traditional Chinese by default.
+        Please ensure that the response follows this structure to facilitate parsing and integration with the application. Respond in Traditional Chinese by default. Please respond in Plain-text way, and don't use any markdown method to represent the response.
         """
 
     # Load the audio file into a Python Blob object containing the audio
@@ -115,7 +115,7 @@ def do_only_text_analysis(target_text, Gemini_model):
             4. Preventive Advice: Offer practical recommendations on how to avoid falling victim to such scams.
             5. Reason for Analysis: Explain the factors and evidence that led to the assessment of the scam risk and type.
             6. Conclusion: Provide a concise conclusion based on the analysis.
-        Please ensure that the response follows this structure to facilitate parsing and integration with the application. Respond in Traditional Chinese by default.
+        Please ensure that the response follows this structure to facilitate parsing and integration with the application. Respond in Traditional Chinese by default. Please respond in Plain-text way, and don't use any markdown method to represent the response.
         Here is my text:
         """
     prompt += target_text
@@ -277,7 +277,7 @@ def predict_video():
     # directly remove the video
     if os.path.exists(video_path):
         os.remove(video_path)
-
+    # print("Done")
     # Return formatted_predictions as JSON response
     return jsonify(formatted_predictions)
 
@@ -290,7 +290,7 @@ def predict_audio():
     # get the user's choice
     language = request.form.get('language', 'english')  # default is English
     text_analysis = request.form.get('text_analysis', 'no')  # default is no doing text analysis
-    
+    # print(language, text_analysis)
     # Check if any file was uploaded
     if not any(request.files.values()):
         return jsonify({'error': 'No files uploaded'}), 400
@@ -335,6 +335,7 @@ def predict_audio():
     # directly remove the audio
     if os.path.exists(audio_path):
         os.remove(audio_path)
+    # print("DONE")
     # Return formatted_predictions as JSON response
     return jsonify(formatted_predictions)
 
@@ -428,12 +429,12 @@ def text_analysis():
     audio.save(audio_path)
     
     # record the response text
-    formatted_response = []  
+    formatted_response = {'None':None} 
     try:
         formatted_text = do_text_analysis(audio_path, Gemini_model)
-        formatted_response.append({'audio_path': audio_path, 'Result': formatted_text})
+        formatted_response = {'audio_path': audio_path, 'Result': formatted_text}
     except Exception as e:
-        formatted_response.append({'error': str(e)})
+        formatted_response = {'error': str(e)}
 
     # directly remove the audio
     if os.path.exists(audio_path):

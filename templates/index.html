@@ -4,19 +4,123 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
+    <style>
+        /* 通用设置 */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #5f5d5d6d;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        h2, h3 {
+            color: #000000;
+            margin: 0;
+        }
+
+        /* 按钮样式 */
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 1.2em;
+            background-color: #babc27;
+            color: rgb(32, 30, 30);
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background-color: #f70000;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            background-color: #003f7f;
+        }
+        hr {
+            border: none;
+            border-top: 2px solid #000; /* Black line, you can adjust the color */
+            width: 90%; /* Line width, adjust as needed */
+            margin: 10px auto; /* Center the line with top and bottom spacing */
+        }
+
+        /* 布局容器 */
+        .container {
+            background-color: rgba(95, 178, 67, 0.871);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 700px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .flex-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
+            margin: 15px 0;
+        }
+
+        .flex-row h3 {
+            flex: 1;
+            text-align: left;
+            margin-right: 20px;
+            font-size: 1.2em;
+        }
+
+        .flex-row button {
+            flex-shrink: 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the Audio and Video Prediction App</h1>
-    <h2>Please select the function you would like to test.</h2>
-    <h3>Upload an audio to test.</h3>
-    <button onclick="window.location.href='/predict_audio_home'">Predict Audio</button>
-    <h3>Upload a video to test.</h3>
-    <button onclick="window.location.href='/predict_video_home'">Predict Video</button>
-    <h3>Upload an online URL for testing. Please remember to consider copyright laws.</h3>
-    <button onclick="window.location.href='/predict_youtube_audio_home'">Predict Youtube audio</button>
-    <h3>Upload an audio to do text analysis.</h3>
-    <button onclick="window.location.href='/text_analysis_home'">Audio Text Analysis</button>
-    <h3>Upload a text to do text analysis.</h3>
-    <button onclick="window.location.href='/text_analysis_upload_string_home'">Only Text Analysis</button>
+    <div class="container">
+        <h1>Welcome to the Audio and Video Prediction App</h1>
+        <h2>Please select the function you would like to test.</h2>
+        <hr>
+        <div class="flex-row">
+            <h3>Upload an audio to test.</h3>
+            <button onclick="window.location.href='/predict_audio_home'">Predict Audio</button>
+        </div>
+
+        <div class="flex-row">
+            <h3>Upload a video to test.</h3>
+            <button onclick="window.location.href='/predict_video_home'">Predict Video</button>
+        </div>
+
+        <div class="flex-row">
+            <h3>Upload an online URL for testing. Please remember to consider copyright laws.</h3>
+            <button onclick="window.location.href='/predict_youtube_audio_home'">Predict Youtube Audio</button>
+        </div>
+
+        <div class="flex-row">
+            <h3>Upload an audio to do text analysis.</h3>
+            <button onclick="window.location.href='/text_analysis_home'">Audio Text Analysis</button>
+        </div>
+
+        <div class="flex-row">
+            <h3>Upload a text to do text analysis.</h3>
+            <button onclick="window.location.href='/text_analysis_upload_string_home'">Only Text Analysis</button>
+        </div>
+    </div>
 </body>
 </html>
